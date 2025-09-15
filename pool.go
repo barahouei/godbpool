@@ -3,7 +3,12 @@ package godbpool
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"time"
+)
+
+var (
+	ErrNilDB error = errors.New("db cannot be nil")
 )
 
 type Options struct {
@@ -17,6 +22,10 @@ type Options struct {
 // configured with the provided options,
 // and warms up the database connections.
 func GetPool(db *sql.DB, options Options) (*sql.DB, error) {
+	if db == nil {
+		return nil, ErrNilDB
+	}
+
 	db.SetMaxIdleConns(options.MinConnections)
 	db.SetMaxOpenConns(options.MaxConnections)
 	db.SetConnMaxIdleTime(options.MaxIdleTime)
@@ -28,6 +37,8 @@ func GetPool(db *sql.DB, options Options) (*sql.DB, error) {
 
 	connections := make([]*sql.Conn, 0, options.MinConnections)
 
+	defer closeConnections(connections)
+
 	for range options.MinConnections {
 		connection, connectionErr := db.Conn(context.Background())
 		if connectionErr != nil {
@@ -37,9 +48,13 @@ func GetPool(db *sql.DB, options Options) (*sql.DB, error) {
 		connections = append(connections, connection)
 	}
 
-	for idx := range connections {
-		connections[idx].Close()
-	}
-
 	return db, nil
+}
+
+func closeConnections(connections []*sql.Conn) {
+	for idx := range connections {
+		if connections[idx] != nil {
+			connections[idx].Close()
+		}
+	}
 }
