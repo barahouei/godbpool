@@ -1,3 +1,4 @@
+// A lightweight Go library for managing a database connection pool with a minimum connection limit.
 package godbpool
 
 import (

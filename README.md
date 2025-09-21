@@ -25,8 +25,8 @@ go get github.com/barahouei/godbpool
 options := godbpool.Options{
     MinConnections:  10,
     MaxConnections:  100,
-    MaxIdleTime:     5 * time.Minute,
-    MaxOpenLifeTime: 30 * time.Minute,
+    MaxIdleTime:     time.Minute * 5,
+    MaxOpenLifeTime: time.Minute * 30,
 }
 
 pool, err := godbpool.GetPool(db, options)
